@@ -30,21 +30,21 @@ jobs:
       - name: Marp Build (README)
         uses: docker://marpteam/marp-cli:v3.0.2
         with:
-          args: README.md -o build/index.html
+          args: README.md -o build/index.html --theme ./css/rose-pine-moon.css
         env:
           MARP_USER: root:root
 
       - name: Marp Build (README.pdf)
         uses: docker://marpteam/marp-cli:v3.0.2
         with:
-          args: README.md --allow-local-files -o build/README.pdf
+          args: README.md --allow-local-files -o build/README.pdf --theme ./css/rose-pine-moon.css
         env:
           MARP_USER: root:root
 
       - name: Marp Build (README.pptx)
         uses: docker://marpteam/marp-cli:v3.0.2
         with:
-          args: README.md --allow-local-files -o build/README.pptx
+          args: README.md --allow-local-files -o build/README.pptx --theme ./css/rose-pine-moon.css
         env:
           MARP_USER: root:root
 
