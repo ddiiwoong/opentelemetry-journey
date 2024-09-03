@@ -56,7 +56,7 @@ jobs:
         if: steps.docs-folder-exists.outputs.has_docs == '0'
         uses: docker://marpteam/marp-cli:v3.0.2
         with:
-          args: -I docs/ -o build/docs/
+          args: -I docs/ -o build/docs/ --theme ./css/rose-pine-moon.css
         env:
           MARP_USER: root:root
 
