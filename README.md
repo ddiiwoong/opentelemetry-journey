@@ -288,7 +288,7 @@ Specifications, Implementations for instrumentation and transmissions of telemet
 - API`는 데이터 유형과 텔레메트리 데이터를 생성하는 방법을 정의합니다.
 - SDK`는 API의 언어별 구현과 구성, 데이터 처리 및 내보내기를 정의합니다. 
 
-클라이언트 디자인 그림 설명
+클라이언트 디자인 그림 설명 
 -->
 
 ## Manually Instrumentation (Python)
@@ -329,22 +329,26 @@ OpenTelemetry instrumentation libraries
 
 https://opentelemetry.io/ecosystem/registry/
 
+
 ### Search `NGINX`
 
 ![bg right:49% width:600px](./img/registry.png)
 
-## OpenTelemetry collector
+<!-- 
+OTel 계측 기능은 이미 다양한 라이브러리에서 성해 놓거나 빌트인 형태로 사용 수 있습니다. 레지스트리에서 원하는 라이브러리를 검색하시면 됩니다. 
+오늘 밋업은 주제가 NGINX 인 만큼 nginx검색하시면 몇개가 보이는데요. 기존에 오픈소스 진영에서 만든 것과 이따 설명해주실 module 등이 보입니다. 
+-->
 
-![center width:780px](./img/collector.png)
 
-<!-- The Collector is a proxy that receives, processes and exports telemetry data in OTLP, Prometheus, and many proprietary tools. -->
-
-
-## OpenTelemetry protocol (OTLP)
+## OpenTelemetry Protocol (OTLP)
 
 https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md
 
-<!-- OTLP(오픈 텔레메트리 프로토콜) 사양은 텔레메트리 소스, 수집기, 텔레메트리 백엔드 등의 중간 노드 간의 텔레메트리 데이터 인코딩, 전송 및 전달 메커니즘을 설명합니다. -->
+<!-- OTLP(오픈 텔레메트리 프로토콜) 사양은 텔레메트리 소스, 수집기, 텔레메트리 백엔드 등의 중간 노드 간의 텔레메트리 데이터 인코딩, 전송 및 전달 메커니즘을 정의한 프로토콜로 grpc나 http 형태로 전달하게 됩니다.
+
+- OTLP는 `gRPC` 및 `HTTP` 전송을 통해 구현되고, 
+- OTLP는 `클라이언트`가 요청을 보내고 `서버`가 해당 응답으로 응답하는 request/responce 유형의 프로토콜입니다.
+- 모든 서버 컴포넌트는 다음 전송 압축 옵션을 지원해야 합니다: none, gzip -->
 
 ##### OTLP is implemented over `gRPC` and `HTTP` transports and specifies the Protocol Buffers schema used for payloads.
 
@@ -353,6 +357,108 @@ https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specificati
 ##### All server components must support the following transport compression options: `none`, `gzip`
 
 
+## OpenTelemetry Collector
+
+
+https://opentelemetry.io/docs/collector/configuration
+
+![center width:750px](./img/collector.png)
+
+<!-- The Collector is a proxy that receives, processes and exports telemetry data in OTLP, Prometheus, and many proprietary tools. 
+
+오픈텔레메트리 collector는 벤더 중립적으로 텔레메트리 데이터를 수신, 처리, 내보내는 방법을 구현할 수 있는 기능을 제공합니다. 따라서 여러 에이전트/수집기를 실행, 운영 및 유지 관리할 필요가 없이 통합해서 운영이 가능합니다. 확장성이 향상되었으며 하나 이상의 오픈 소스 또는 상용 백엔드로 전송하는 오픈 소스 통합 가시성 데이터 형식(예: Jaeger, Prometheus, FluentBit 등)을 지원합니다. 
+-->
+
+
+## OpenTelemetry Collector Receiver
+```yml
+receivers:
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_compact:
+      thrift_http:
+  kafka:
+    protocol_version: 2.0.0
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: otel-collector
+          scrape_interval: 5s
+          static_configs:
+            - targets: [localhost:8888]
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+```
+
+<!-- 리시버는 하나 이상의 소스에서 원격 분석을 수집합니다. 풀 또는 푸시 기반일 수 있으며 하나 이상의 데이터 소스를 지원할 수 있습니다.
+
+보시면 jaeger grpc로 보내고, prometheus로도 보내고, 뒤에 말씀드릴 otlp 프로토콜로도 보냅니다.
+-->
+
+## OpenTelemetry Collector Processors
+```yml
+processors:
+  attributes:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+      - key: db.statement
+        action: delete
+      - key: email
+        action: hash
+  probabilistic_sampler:
+    hash_seed: 22
+    sampling_percentage: 15
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 4000
+    spike_limit_mib: 500
+  filter:
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+        - prefix/.*
+        - prefix_.*
+```
+
+<!-- 프로세서는 리시버가 수집한 데이터를 가져와서 exporter로 보내기 전에 데이터를 수정하거나 변환하는 역할을 합니다. 데이터 처리는 각 프로세서에 대해 정의된 규칙이나 설정에 따라 이루어지며, 여기에는 필터링, 삭제, 이름을 바꾼다던지, 텔레메트리 재계산 등의 작업이 포함될 수 있습니다. 
+
+그리고 속성값을 추가하거나, sampling 퍼센테이지를 변경하는 것들이 가능합니다.
+-->
+
+## OpenTelemetry Collector Exporter
+```yml
+exporters:
+  file:
+    path: ./filename.json
+  jaeger:
+    endpoint: http://jaeger-all-in-one:14250
+    insecure: true
+  kafka:
+    protocol_version: 2.0.0
+  otlphttp:
+    endpoint: https://otlp.example.com:4318
+  prometheus:
+    endpoint: prometheus:8889
+    namespace: default
+  prometheusremotewrite:
+    endpoint: "http://some.url:9411/api/prom/push"
+  zipkin:
+    endpoint: "http://localhost:9411/api/v2/spans"
+```
+<!-- 익스포터는 하나 이상의 백엔드 또는 대상에 데이터를 전송합니다. 익스포터도 풀 또는 푸시 기반일 수 있으며 하나 이상의 데이터 소스를 지원할 수 있고요. 
+
+대부분의 내보내기는 최소한 타겟을 지정하거나 인증 토큰이나 TLS 인증서와 같은 보안 설정이 필요합니다. 
+예시에서 보듯이 파일, 예거, 프로메테우스 등등의 엔드포인트로 멀티 타켓으로 데이터를 내보낼 수 있습니다
+-->
 
 ## Resource Semantic Conventions
 
@@ -360,8 +466,11 @@ https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specificati
 https://opentelemetry.io/docs/specs/semconv/
 
 ![center w:650](./img/k8sattribute.png)
-<!-- 리소스는 원격 분석을 생성하는 엔티티를 리소스 속성으로 나타냅니다. ㅇ
-예시는 Kubernetes 객체와 메타데이터를 이해하는 데 유용한 리소스입니다: -->
+<!-- 리소스는 텔레메트리를 생성하는 엔티티를 속성으로 나타내는걸 말하고 
+여러 CSP나 플랫폼, 서비스 등에서 메타데이터를 가져와서 속성에 넣는것을 말합니다. 
+예시는 Kubernetes 객체와 메타데이터를 이해하는 데 유용한 리소스인데요.
+보시면 리시버가 데이터를 수집하고 process 단계에서 kubernetes api를 호출해서 메타데이터를 가져와서 속성값에 넣을수 있습니다. 
+-->
 
 ## AWS Distro for OpenTelemetry (ADOT)
 
@@ -372,13 +481,39 @@ https://opentelemetry.io/docs/specs/semconv/
 ![center w:800](./img/adot.png)
 
 <!-- ADOT 수집기
-사용자 환경에서 통합 가시성을 위해 ADOT를 사용하는 경우, 텔레메트리 데이터 수집은 ADOT 수집기를 사용하여 수행됩니다. ADOT 수집기는 텔레메트리 데이터를 수신, 처리 및 내보내는 방법에 대해 공급업체에 구애받지 않는 구현을 제공합니다. 따라서 하나 이상의 오픈 소스 또는 상용 백엔드로의 전송을 지원하기 위해 여러 개의 에이전트를 실행하고 유지 관리할 필요가 없습니다.
-또한 수집기는 OpenTelemetry 계측 라이브러리 중 하나를 사용하는 경우 텔레메트리 데이터의 기본 위치이기도 합니다. -->
+저도 먹고 살아야 하니까 회사 오픈소스 이야기도 잠깐 드리려고 합니다. 
+위에서 말씀드린것 처럼 AWS 서비스 통합을 원할하게 하기 위해서 ADOT라고 오픈소스 형태로 제공하고 있고요. 기능은 위에서 설명드린 컬렉터와 동일합니다.
+
+AWS환경에서 적용하는 패턴은 다양한데 일반적으로는 사이드카나 EK에서 데몬셋 형태로 구현을 많이 하시고요. 보시는 것처럼 AWS 서비스에서 나오는 데이터를 수신할수 있고 프로세싱을 해서
+다른 서비스로 내보내는것이 가능합니다. 
+-->
 
 ## AWS Distro for OpenTelemetry (ADOT)
 
-<!-- ADOT를 사용하면 애플리케이션을 한 번 계측하고 연관된 로그, 메트릭, 추적을 Prometheus용 Amazon Managed Service, Amazon CloudWatch, AWS X-Ray, Amazon Open Search, 모든 OTLP(OpenTelemetry Protocol) 호환 백엔드, Apache Kafka용 Amazon Managed Streaming(MSK)과 같은 하나 이상의 가시성 백엔드로 전송할 수 있습니다: -->
+<!-- 
+앞에서 말씀드린대로 다양한 소스와 타겟을 추가적으로 지원하기 때문에 AWS를 사용하시면 사용하시는것을 권장합니다.
+-->
 ![center w:900](./img/adot2.png)
+
+
+## OpenTelemetry Ecosystem
+https://opentelemetry.io/ecosystem/
+
+- [OpenTelemetry Demo](https://opentelemetry.io/ecosystem/demo/)
+
+- [Registry](https://opentelemetry.io/ecosystem/registry/)
+
+- [Adopters](https://opentelemetry.io/ecosystem/adopters/)
+Organizations that use OpenTelemetry
+
+- [Distributions](https://opentelemetry.io/ecosystem/distributions/)
+List of open source OpenTelemetry distributions maintained by third parties.
+
+- [Integrations](https://opentelemetry.io/ecosystem/integrations/)
+Libraries, services, and apps with first-party support for OpenTelemetry.
+
+- [Vendors](https://opentelemetry.io/ecosystem/vendors/)
+Vendors who natively support OpenTelemetry
 
 ## OpenTelemetry Demo
 
@@ -391,19 +526,38 @@ https://opentelemetry.io/docs/specs/semconv/
 
 ![bg right:57% width:700px](./img/demo.png)
 
-## New Otel Feature
-Envoy and Istio
-Profiling Agent
-LLM Observability
+<!-- 데모를 보여드릴텐데 잠시 준비를 할게요~-->
 
-## OpenTelemetry Collector Antipatterns
+
+## New Otel Feature
+Observability in Envoy and Istio
+https://opentelemetry.io/blog/2024/new-otel-features-envoy-istio/
+
+![center w:700](./img/istio.png)
+
+<!-- Istio 서비스 메시에서 배포한 Envoy 프록시에서 발생하는 수신 및 발신 요청을 통해 확인할 수 있습니다. 예전에는 예거로 바로 보내는 부분이 지원되었었는데 istio 설정을 통해서 트레이스 엔드포인트를 otel collector로 보낼수 있습니다. -->
+
+## New Otel Feature
+Continuous Profiling Agent
+https://github.com/open-telemetry/opentelemetry-ebpf-profiler
+
+![center w:750](./img/cp.png)
+
+<!-- 엘라스틱에서 주도하고 있는 아직 정식으로 적용되지는 않았지만 ebpf를 통해서 애플리케이션의 프로파일 정보를 호스트에서 수집하고 컬렉터로 수집하고 백엔드로 전달하는 실험적인 프로젝트도 진행중입니다. -->
+
+## New Otel Feature
+LLM Observability
+https://github.com/openlit/openlit
+
+![center w:800](./img/llm.png)
+
+<!-- LLM 및 VectorDB 성능을 모니터링 하는 용도로 사용할 수 있고요.. 요즘 이런 형태의 오픈소스들이 범람하고 있는데 OpenLIT는 OpenTelemetry 진영에서 주가 되는 프로젝트이고 주로 베드락같이 하나의 API를 여러 팀이 사용할 때 비용 추적을 위해서 사용할수 있습니다. 오픈 텔레메트리 네이티브 및 벤더 중립적이기 때문에 OpenLIT SDK를 코드에 추가해서 여러 벤더의 LLM이나 벡터DB nvidia GPU(주가 떨어지고 있죠?) 등의 메트릭이나 트레이스를 수집해서 보여줄수 있습니다. -->
 
 
 ## References
 
 - https://opentelemetry.io/docs/
 - https://w3c.github.io/trace-context/
-- https://w3c.github.io/baggage/
 - https://github.com/open-telemetry/opentelemetry-specification
 - https://opentelemetry.io/docs/specs/semconv/
 - https://opentelemetry.io/docs/specs/otel/protocol/
@@ -412,3 +566,6 @@ LLM Observability
 - https://opentelemetry.io/blog/2024/
 
 # Thank You
+
+@ddiiwoong
+jinwoong@amazon.com
