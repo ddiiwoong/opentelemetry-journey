@@ -56,7 +56,7 @@ https://youtu.be/REWeBzGuzCc?si=Gj4DTQLTTledvv_o
 > “우리가 아는 것에는 네 가지가 있습니다.
 첫째, 안다는 것을 알고 있는 것 (Known knowns)
 둘째, 모르고 있다는 것을 아는 것 (Known unknowns)
-셋째, 모르고 있다는 사실조차 모르는 것 (<span style="color:gold;">Unknown unknowns</span>)
+셋째, 모르고 있다는 사실조차 모르는 것 (*Unknown unknowns*)
 그리고 또 하나, 안다는 사실을 모르는 것이 있죠. (Unknown knowns)
 다시 말해, 안다고 생각하지만 사실은 몰랐던 것입니다.“
 
@@ -67,7 +67,7 @@ https://youtu.be/REWeBzGuzCc?si=Gj4DTQLTTledvv_o
 
 ## Observability Introduction
 
-### A <span style="color:gold;">*system*</span> is `observable` if you can determine the <span style="color:gold;">*behavior*</span> of the system based on its <span style="color:gold;">*outputs*</span>.
+### A *system* is `observable` if you can determine the *behavior* of the system based on its *outputs*.
 
 <!--시스템의 출력을 기반으로 시스템의 동작을 파악할 수 있다면 시스템은 '관찰 가능'합니다.
 system은 연결된 컴포넌트의 하나의 집합이라고 볼 수 있음
