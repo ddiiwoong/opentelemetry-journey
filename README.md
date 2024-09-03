@@ -49,9 +49,25 @@ Jinwoong Kim
 
 - @ddiiwoong
 
+## Unknown/Unknown
+
+https://youtu.be/REWeBzGuzCc?si=Gj4DTQLTTledvv_o
+
+> “우리가 아는 것에는 네 가지가 있습니다.
+첫째, 안다는 것을 알고 있는 것 (Known knowns)
+둘째, 모르고 있다는 것을 아는 것 (Known unknowns)
+셋째, 모르고 있다는 사실조차 모르는 것 (<span style="color:gold;">Unknown unknowns</span>)
+그리고 또 하나, 안다는 사실을 모르는 것이 있죠. (Unknown knowns)
+다시 말해, 안다고 생각하지만 사실은 몰랐던 것입니다.“
+
+![bg right:29% w:350px](./img/unknown.png)
+
+<!-- 
+미국의 전 국방장관 도널드 럼즈벨드가 이라크 침공때 기자회견에서 이야기한 말로 "모른다는 사실조차 모르는 상태"를 말하는데 최근의 복잡도가 높은 엔터프라이즈 응용프로그램에서 특히나 공감이 되는 말입니다. 기존의 모니터링 관점은 미리 예측가능한 부분을 임계치로 잡고 "known unknowns" 환경을 관측하는것을 말한다면 observability 은 "known unknowns"에 더해서 "unknown unknowns"을 추가적으로 같이 분석하는 것을 포함하는 것을 말합니다.  -->
+
 ## Observability Introduction
 
-### A *system* is `observable` if you can determine the *behavior* of the system based on its *outputs*.
+### A <span style="color:gold;">*system*</span> is `observable` if you can determine the <span style="color:gold;">*behavior*</span> of the system based on its <span style="color:gold;">*outputs*<span style="color:gold;">.
 
 <!--시스템의 출력을 기반으로 시스템의 동작을 파악할 수 있다면 시스템은 '관찰 가능'합니다.
 system은 연결된 컴포넌트의 하나의 집합이라고 볼 수 있음
@@ -90,7 +106,10 @@ output은 behavior의 구체적인 결과
 
 * 마이크로서비스 환경같은 최신 아키텍처에서 수많은 구성 요소간의 종속성과 관계를 측정하고 지연 병목을 찾아내는 도구이기 때문에 Observability에서 매우 중요 -->
 
+
 ## Trace
+
+
 ![trace](./img/trace1.png)
 
 <!-- 로그와 메트릭 모두 최신 애플리케이션에서 한계가 있습니다.
