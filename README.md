@@ -337,9 +337,28 @@ instrumentor.instrument_app(app)
 def server_request():
     print(request.args.get("param"))
     return "served"
-
 ```
 
+## Zero-code Instrumentation (Python)
+
+```bash
+pip install opentelemetry-distro opentelemetry-exporter-otlp
+opentelemetry-bootstrap -a install
+```
+```bash
+opentelemetry-instrument \
+    --traces_exporter console,otlp \
+    --metrics_exporter console \
+    --service_name your-service-name \
+    --exporter_otlp_endpoint 0.0.0.0:4317 \
+    python myapp.py
+```
+```python
+@app.route("/server_request")
+def server_request():
+    print(request.args.get("param"))
+    return "served"
+```
 
 
 ## OpenTelemetry Registry
