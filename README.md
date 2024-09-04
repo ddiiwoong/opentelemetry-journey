@@ -43,7 +43,7 @@ Jinwoong Kim
 ## Who am I?
 - Jinwoong Kim
 
-- Cloud Architect @AWS Professional Services
+- Cloud Architect
 
 - Speaker, Translator
 
@@ -606,4 +606,3 @@ https://github.com/openlit/openlit
 # Thank You
 
 @ddiiwoong
-jinwoong@amazon.com
