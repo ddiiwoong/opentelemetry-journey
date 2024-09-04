@@ -41,13 +41,6 @@ jobs:
         env:
           MARP_USER: root:root
 
-      - name: Marp Build (README.pptx)
-        uses: docker://marpteam/marp-cli:v3.0.2
-        with:
-          args: README.md --allow-local-files -o build/README.pptx --theme ./css/rose-pine-moon.css
-        env:
-          MARP_USER: root:root
-
       - name: Check if docs folder exists
         id: docs-folder-exists
         run: bash -c "[[ -d docs ]] ; echo \"has_docs=\$?\" >> \"$GITHUB_OUTPUT\""
